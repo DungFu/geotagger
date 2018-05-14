@@ -1,0 +1,35 @@
+{
+  "name": "geotagger",
+  "version": "0.0.1",
+  "description": "The ultimate photo geotagger!",
+  "main": "app.js",
+  "dependencies": {
+    "express": "^4.16.3",
+    "gm": "^1.23.1",
+    "opn": "^5.3.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DungFu/geotagger.git"
+  },
+  "keywords": [
+    "geotagger",
+    "geo",
+    "tag",
+    "photo",
+    "exif",
+    "latitude",
+    "longitude"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DungFu/geotagger/issues"
+  },
+  "homepage": "https://github.com/DungFu/geotagger#readme"
+}
