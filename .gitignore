@@ -62,3 +62,6 @@ typings/
 
 # package-lock.json npm file
 package-lock.json
+
+#configuration file for app.js
+config.json

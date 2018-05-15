@@ -1,5 +1,3 @@
-require('dotenv').config()
-
 var fs = require('fs');
 var gm = require('gm');
 var opn = require('opn');
@@ -7,14 +5,12 @@ var express = require('express');
 var app = express();
 var path = require('path');
 
-var imagespath = '/Users/fmeyer/Downloads/';
-
 app.use(express.static('public'))
 app.set('views', './views')
 app.set('view engine', 'pug')
 
 app.get('/', function (req, res) {
-  res.render('index', {GOOGLE_API_KEY: process.env.GOOGLE_API_KEY})
+  res.render('index', {GOOGLE_API_KEY: require('./config.json').GOOGLE_API_KEY})
 })
 
 app.get('/convert/:filename', function(req, res) {
@@ -23,7 +19,7 @@ app.get('/convert/:filename', function(req, res) {
     width = req.query.width;
   }
   res.setHeader('Content-Type', 'image/jpeg');
-  gm(path.join(imagespath + req.params.filename))
+  gm(path.join(require('./config.json').IMAGES_PATH + req.params.filename))
     .resize(width)
     .stream('jpeg')
     .pipe(res);
