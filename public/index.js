@@ -1,5 +1,6 @@
 var map = null;
 var searchBox = null;
+var service = null;
 var markers = [];
 var loading = false;
 
@@ -14,6 +15,7 @@ function initAutocomplete() {
   // Create the search box and link it to the UI element.
   var input = document.getElementById('search-input');
   searchBox = new google.maps.places.SearchBox(input);
+  service = new google.maps.places.PlacesService(map);
   map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
 
   // Bias the SearchBox results towards current map's viewport.
@@ -22,8 +24,21 @@ function initAutocomplete() {
   });
 
   map.addListener('click', function(e) {
-    document.getElementById("lat").value = e.latLng.lat();
-    document.getElementById("lng").value = e.latLng.lng();
+    if (e.placeId) {
+      service.getDetails({placeId: e.placeId}, function(place, status) {
+        if (status == google.maps.places.PlacesServiceStatus.OK) {
+          var lat = place.geometry.location.lat();
+          var lng = place.geometry.location.lng();
+          createMarker(lat, lng, true, true);
+          setLatLngForm(lat, lng);
+        }
+      });
+    } else {
+      var lat = e.latLng.lat();
+      var lng = e.latLng.lng();
+      createMarker(lat, lng, true, true);
+      setLatLngForm(lat, lng);
+    }
   });
 
   // Listen for the event fired when the user selects a prediction and retrieve
@@ -49,20 +64,12 @@ function initAutocomplete() {
         return;
       }
 
-      var marker = new google.maps.Marker({
-        map: map,
-        title: place.name,
-        position: place.geometry.location
-      });
-
-      marker.addListener('click', function() {
-        var position = marker.getPosition();
-        map.panTo(position);
-        setLatLngForm(position.lat(), position.lng());
-      });
-
-      // Create a marker for each place.
-      markers.push(marker);
+      createMarker(
+        place.geometry.location.lat(),
+        place.geometry.location.lng(),
+        false,
+        false
+      );
 
       if (place.geometry.viewport) {
         // Only geocodes have viewport.
@@ -173,23 +180,7 @@ function currentLoaded(image) {
     var latVal = dmsRationalToDeg(lat, latRef);
     var lngVal = dmsRationalToDeg(lng, lngRef);
     setLatLngForm(latVal, lngVal);
-    if (map !== null) {
-      // Clear out the old markers.
-      markers.forEach(function(marker) {
-        marker.setMap(null);
-      });
-      markers = [];
-
-      var marker = new google.maps.Marker({
-        map: map,
-        position: {
-          lat: latVal,
-          lng: lngVal
-        }
-      });
-      map.panTo(marker.getPosition());
-      markers.push(marker);
-    }
+    createMarker(latVal, lngVal, true, true);
     updateLoadingState(false);
   });
 }
@@ -207,6 +198,37 @@ function updateLoadingState(loadingState) {
 function setLatLngForm(lat, lng) {
   document.getElementById("lat").value = lat;
   document.getElementById("lng").value = lng;
+}
+
+function createMarker(lat, lng, wipe, panTo) {
+  if (map !== null) {
+    if (wipe) {
+      markers.forEach(function(marker) {
+        marker.setMap(null);
+      });
+      markers = [];
+    }
+
+    var marker = new google.maps.Marker({
+      map: map,
+      position: {
+        lat: lat,
+        lng: lng
+      }
+    });
+
+    marker.addListener('click', function() {
+      var position = marker.getPosition();
+      map.panTo(position);
+      setLatLngForm(position.lat(), position.lng());
+    });
+
+    if (panTo) {
+      map.panTo(marker.getPosition());
+    }
+
+    markers.push(marker);
+  }
 }
 
 function dmsRationalToDeg(dmsArray, ref) {
