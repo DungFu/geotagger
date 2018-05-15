@@ -23,7 +23,10 @@ html
         input#lat(name='lat', style='clear: none;', type='number', placeholder='Latitude')
         input#lng(name='lng', style='clear: none;', type='number', placeholder='Longitude')
         button(onclick='next(this);', type='button') Next
-      img#current(onload='currentLoaded(this);', src='#', alt='your image')
+      div#current-wrapper
+        img#current(onload='currentLoaded(this);', src='#', alt='your image')
+        div#loader-container
+          div.loader Loading...
     img#next1.off-screen(src='#')
     img#next2.off-screen(src='#')
     img#next3.off-screen(src='#')

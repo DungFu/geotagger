@@ -1,12 +1,16 @@
 var map = null;
 var searchBox = null;
 var markers = [];
+var loading = false;
 
 function initAutocomplete() {
+  document.getElementById("current").src = 'http://via.placeholder.com/' + parseInt(window.innerWidth / 2.0) + 'x' + parseInt(window.innerWidth * 3.0 / 8.0);
+
   map = new google.maps.Map(document.getElementById('map'), {
     center: {lat: -33.8688, lng: 151.2195},
     zoom: 16,
-    mapTypeId: 'roadmap'
+    mapTypeId: 'roadmap',
+    keyboardShortcuts: false
   });
 
   // Create the search box and link it to the UI element.
@@ -78,11 +82,14 @@ var currentFile = -1;
 function readURL(input) {
   files = input.files;
   currentFile = -1;
+  loading = false;
   next();
 }
 
 function next() {
-  var basePath = 'http://localhost:8080/convert/';
+  if (loading) {
+    return;
+  }
   var form = document.getElementById("exifForm");
   if (currentFile >= 0 && currentFile < files.length) {
     form.action = '/setexif/' + files[currentFile].name;
@@ -90,71 +97,108 @@ function next() {
   }
   if (currentFile < files.length - 1) {
     currentFile++;
-    document.getElementById("current").src =
-      basePath + files[currentFile].name + '?width=' + parseInt(screen.width/2);
+    document.getElementById("current").src = getRemotePathForFile(currentFile, false);
     for (var i = 1; i <= 5; i++) {
       if (currentFile + i < files.length) {
-        document.getElementById("next"+i).src =
-          basePath + files[currentFile + i].name + '?width=' + parseInt(screen.width/2);
+        document.getElementById("next"+i).src = getRemotePathForFile(currentFile + i, false);
       } else {
         break;
       }
     }
     document.getElementById("progress").innerHTML = currentFile + 1 + '/' + files.length;
+    updateLoadingState(true);
   } else {
     alert('no more photos');
   }
 }
 
 function prev() {
-  var basePath = 'http://localhost:8080/convert/';
+  if (loading) {
+    return;
+  }
   if (currentFile > 0) {
     currentFile--;
-    document.getElementById("current").src =
-      basePath + files[currentFile].name + '?width=' + parseInt(screen.width/2);
+    document.getElementById("current").src = getRemotePathForFile(currentFile, true);
     for (var i = 1; i <= 5; i++) {
       if (currentFile + i < files.length) {
-        document.getElementById("next"+i).src =
-          basePath + files[currentFile + i].name + '?width=' + parseInt(screen.width/2);
+        document.getElementById("next"+i).src = getRemotePathForFile(currentFile + i, false);
       } else {
         break;
       }
     }
     document.getElementById("progress").innerHTML = currentFile + 1 + '/' + files.length;
+    updateLoadingState(true);
   } else {
     alert('no more photos');
   }
 }
 
+function getRemotePathForFile(fileIndex, clearPrevious) {
+  var basePath = 'http://localhost:8080/convert/';
+  if (clearPrevious && files[fileIndex].hasOwnProperty('remotePath')) {
+    delete files[fileIndex].remotePath;
+  }
+  if (!files[fileIndex].hasOwnProperty('remotePath')) {
+    files[fileIndex].remotePath =
+      basePath +
+      files[fileIndex].name +
+      '?width=' +
+      parseInt(window.innerWidth/2) +
+      '&timestamp=' +
+      Date.now();
+  }
+  return files[fileIndex].remotePath;
+}
+
 function currentLoaded(image) {
   image.exifdata = null;
   EXIF.getData(image, function() {
-      var lat = EXIF.getTag(this, "GPSLatitude");
-      var latRef = EXIF.getTag(this, "GPSLatitudeRef");
-      var lng = EXIF.getTag(this, "GPSLongitude");
-      var lngRef = EXIF.getTag(this, "GPSLongitudeRef");
-      var latVal = dmsRationalToDeg(lat, latRef);
-      var lngVal = dmsRationalToDeg(lng, lngRef);
-      document.getElementById("lat").value = latVal;
-      document.getElementById("lng").value = lngVal;
-      if (map !== null) {
-        // Clear out the old markers.
-        markers.forEach(function(marker) {
-          marker.setMap(null);
-        });
-        markers = [];
+    var lat = EXIF.getTag(this, "GPSLatitude");
+    var latRef = EXIF.getTag(this, "GPSLatitudeRef");
+    var lng = EXIF.getTag(this, "GPSLongitude");
+    var lngRef = EXIF.getTag(this, "GPSLongitudeRef");
 
-        var marker = new google.maps.Marker({
-          map: map,
-          position: {
-            lat: latVal,
-            lng: lngVal
-          }
-        });
-        map.setCenter(marker.getPosition());
-        markers.push(marker);
-      }
+    if (lat === undefined
+      || latRef === undefined
+      || lng === undefined
+      || lngRef === undefined) {
+      updateLoadingState(false);
+      return;
+    }
+
+    var latVal = dmsRationalToDeg(lat, latRef);
+    var lngVal = dmsRationalToDeg(lng, lngRef);
+    document.getElementById("lat").value = latVal;
+    document.getElementById("lng").value = lngVal;
+    if (map !== null) {
+      // Clear out the old markers.
+      markers.forEach(function(marker) {
+        marker.setMap(null);
+      });
+      markers = [];
+
+      var marker = new google.maps.Marker({
+        map: map,
+        position: {
+          lat: latVal,
+          lng: lngVal
+        }
+      });
+      map.setCenter(marker.getPosition());
+      markers.push(marker);
+    }
+    updateLoadingState(false);
   });
+}
+
+function updateLoadingState(loadingState) {
+  loading = loadingState;
+  document.getElementById("loader-container").style.visibility = loading ? "visible" : "hidden";
+  if (loading) {
+    document.getElementById("current").classList.add('blur-image');
+  } else {
+    document.getElementById("current").classList.remove('blur-image');
+  }
 }
 
 function dmsRationalToDeg(dmsArray, ref) {

@@ -43,5 +43,23 @@ opn('http://localhost:8080');
 
 function setLatLngFile(filename, lat, lng) {
   var imagePath = path.join(require('./config.json').IMAGES_PATH, filename);
-  exiftool.write(imagePath, { GPSLatitude: lat, GPSLongitude: lng });
+  var latRef = 'North';
+  if (lat < 0) {
+    lat = Math.abs(lat);
+    latRef = 'South';
+  }
+  var lngRef = 'East';
+  if (lng < 0) {
+    lng = Math.abs(lng);
+    lngRef = 'West';
+  }
+  exiftool.write(
+    imagePath,
+    {
+      GPSLatitude: lat,
+      GPSLatitudeRef: latRef,
+      GPSLongitude: lng,
+      GPSLongitudeRef: lngRef
+    }
+  );
 }
