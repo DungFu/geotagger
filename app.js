@@ -1,14 +1,13 @@
-var bodyParser = require('body-parser')
-var express = require('express');
-var fs = require('fs');
-var gm = require('gm');
-var opn = require('opn');
-var path = require('path');
-
+const bodyParser = require('body-parser')
+const express = require('express');
+const fs = require('fs');
+const gm = require('gm');
+const opn = require('opn');
+const path = require('path');
 const { ExifTool } = require("exiftool-vendored");
-const exiftool = new ExifTool();
 
-var app = express();
+const exiftool = new ExifTool();
+const app = express();
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
