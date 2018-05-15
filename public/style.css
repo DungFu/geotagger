@@ -44,6 +44,7 @@ body {
 
 #current {
   width: 100%;
+  visibility: hidden;
 }
 
 #loader-container {

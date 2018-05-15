@@ -4,8 +4,6 @@ var markers = [];
 var loading = false;
 
 function initAutocomplete() {
-  document.getElementById("current").src = 'http://via.placeholder.com/' + parseInt(window.innerWidth / 2.0) + 'x' + parseInt(window.innerWidth * 3.0 / 8.0);
-
   map = new google.maps.Map(document.getElementById('map'), {
     center: {lat: -33.8688, lng: 151.2195},
     zoom: 16,
@@ -50,21 +48,21 @@ function initAutocomplete() {
         console.log("Returned place contains no geometry");
         return;
       }
-      var icon = {
-        url: place.icon,
-        size: new google.maps.Size(71, 71),
-        origin: new google.maps.Point(0, 0),
-        anchor: new google.maps.Point(17, 34),
-        scaledSize: new google.maps.Size(25, 25)
-      };
 
-      // Create a marker for each place.
-      markers.push(new google.maps.Marker({
+      var marker = new google.maps.Marker({
         map: map,
-        icon: icon,
         title: place.name,
         position: place.geometry.location
-      }));
+      });
+
+      marker.addListener('click', function() {
+        var position = marker.getPosition();
+        map.panTo(position);
+        setLatLngForm(position.lat(), position.lng());
+      });
+
+      // Create a marker for each place.
+      markers.push(marker);
 
       if (place.geometry.viewport) {
         // Only geocodes have viewport.
@@ -74,6 +72,11 @@ function initAutocomplete() {
       }
     });
     map.fitBounds(bounds);
+
+    if (markers.length === 1) {
+      var position = markers[0].getPosition();
+      setLatLngForm(position.lat(), position.lng());
+    }
   });
 }
 
@@ -97,6 +100,7 @@ function next() {
   }
   if (currentFile < files.length - 1) {
     currentFile++;
+    document.getElementById("current").style.visibility = "visible";
     document.getElementById("current").src = getRemotePathForFile(currentFile, false);
     for (var i = 1; i <= 5; i++) {
       if (currentFile + i < files.length) {
@@ -168,8 +172,7 @@ function currentLoaded(image) {
 
     var latVal = dmsRationalToDeg(lat, latRef);
     var lngVal = dmsRationalToDeg(lng, lngRef);
-    document.getElementById("lat").value = latVal;
-    document.getElementById("lng").value = lngVal;
+    setLatLngForm(latVal, lngVal);
     if (map !== null) {
       // Clear out the old markers.
       markers.forEach(function(marker) {
@@ -184,7 +187,7 @@ function currentLoaded(image) {
           lng: lngVal
         }
       });
-      map.setCenter(marker.getPosition());
+      map.panTo(marker.getPosition());
       markers.push(marker);
     }
     updateLoadingState(false);
@@ -199,6 +202,11 @@ function updateLoadingState(loadingState) {
   } else {
     document.getElementById("current").classList.remove('blur-image');
   }
+}
+
+function setLatLngForm(lat, lng) {
+  document.getElementById("lat").value = lat;
+  document.getElementById("lng").value = lng;
 }
 
 function dmsRationalToDeg(dmsArray, ref) {
