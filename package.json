@@ -28,7 +28,10 @@
     "latitude",
     "longitude"
   ],
-  "author": "",
+  "contributors": [
+    "Freddie Meyer",
+    "Lindsey Meyer"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/DungFu/geotagger/issues"
