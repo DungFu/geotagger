@@ -5,12 +5,12 @@ var express = require('express');
 var app = express();
 var path = require('path');
 
-app.use(express.static('public'))
-app.set('views', './views')
-app.set('view engine', 'pug')
+app.use(express.static('public'));
+app.set('views', './views');
+app.set('view engine', 'pug');
 
 app.get('/', function (req, res) {
-  res.render('index', {GOOGLE_API_KEY: require('./config.json').GOOGLE_API_KEY})
+  res.render('index', {GOOGLE_API_KEY: require('./config.json').GOOGLE_API_KEY});
 })
 
 app.get('/convert/:filename', function(req, res) {
