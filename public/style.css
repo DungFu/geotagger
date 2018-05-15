@@ -1,0 +1,46 @@
+body {
+  height: 100%;
+  width: 100%;
+  font-family: Roboto;
+}
+
+#map {
+  left: 0;
+  top: 0;
+  position: absolute;
+  width: 50%;
+  height: 100%;
+  display:inline-block;
+}
+
+#search-input {
+  background-color: #fff;
+  font-size: 14px;
+  font-weight: 300;
+  margin-left: 12px;
+  padding: 4px 11px 4px 13px;
+  text-overflow: auto;
+  width: 50%;
+  margin-top: 10px;
+}
+
+#search-input:focus {
+  border-color: #4d90fe;
+}
+
+#right-col {
+  right: 0;
+  top: 0;
+  position: absolute;
+  width: 50%;
+  height: 100%;
+}
+
+#current {
+  width: 100%;
+}
+
+.off-screen {
+  right: -9999px;
+  position: absolute;
+}

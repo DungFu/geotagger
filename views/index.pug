@@ -1,0 +1,26 @@
+doctype html
+html
+  head
+    title Photo Geotagger
+    link(rel="stylesheet" href="style.css")
+  body
+    script(src='/map.js')
+    script(
+      src='https://maps.googleapis.com/maps/api/js?key=' + GOOGLE_API_KEY + '&libraries=places&callback=initAutocomplete', 
+      async='', 
+      defer=''
+    )
+    script(src='/next.js')
+
+    #left-col
+      input#search-input.controls(type='text', placeholder='Search')
+      #map
+    #right-col
+      input(type='file', onchange='readURL(this);', multiple='', style='clear: none;')
+      button(onclick='next()') Next
+      img#current(src='#', alt='your image')
+    img#next1.off-screen(src='#')
+    img#next2.off-screen(src='#')
+    img#next3.off-screen(src='#')
+    img#next4.off-screen(src='#')
+    img#next5.off-screen(src='#')

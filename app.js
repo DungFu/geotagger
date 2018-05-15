@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 var fs = require('fs');
 var gm = require('gm');
 var opn = require('opn');
@@ -7,9 +9,13 @@ var path = require('path');
 
 var imagespath = '/Users/fmeyer/Downloads/';
 
-app.get('/', function(req, res) {
-  res.sendFile(path.join(__dirname + '/index.html'));
-});
+app.use(express.static('public'))
+app.set('views', './views')
+app.set('view engine', 'pug')
+
+app.get('/', function (req, res) {
+  res.render('index', {GOOGLE_API_KEY: process.env.GOOGLE_API_KEY})
+})
 
 app.get('/convert/:filename', function(req, res) {
   var width = 512;
