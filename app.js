@@ -1,10 +1,17 @@
+var bodyParser = require('body-parser')
+var express = require('express');
 var fs = require('fs');
 var gm = require('gm');
 var opn = require('opn');
-var express = require('express');
-var app = express();
 var path = require('path');
 
+const { ExifTool } = require("exiftool-vendored");
+const exiftool = new ExifTool();
+
+var app = express();
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use(express.static('public'));
 app.set('views', './views');
 app.set('view engine', 'pug');
@@ -19,12 +26,23 @@ app.get('/convert/:filename', function(req, res) {
     width = req.query.width;
   }
   res.setHeader('Content-Type', 'image/jpeg');
-  gm(path.join(require('./config.json').IMAGES_PATH + req.params.filename))
+  gm(path.join(require('./config.json').IMAGES_PATH, req.params.filename))
     .resize(width)
     .stream('jpeg')
     .pipe(res);
 });
 
+app.post('/setexif/:filename', function(req, res) {
+  if (req.body) {
+    setLatLngFile(req.params.filename, req.body.lat, req.body.lng);
+  }
+});
+
 app.listen(8080);
 
 opn('http://localhost:8080');
+
+function setLatLngFile(filename, lat, lng) {
+  var imagePath = path.join(require('./config.json').IMAGES_PATH, filename);
+  exiftool.write(imagePath, { GPSLatitude: lat, GPSLongitude: lng });
+}
