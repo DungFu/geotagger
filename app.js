@@ -7,26 +7,75 @@ const path = require('path');
 const { ExifTool } = require("exiftool-vendored");
 
 const exiftool = new ExifTool();
-const app = express();
+const expressApp = express();
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(express.static('public'));
-app.set('views', './views');
-app.set('view engine', 'pug');
+expressApp.use(bodyParser.urlencoded({ extended: true }));
+expressApp.use(bodyParser.json());
 
-app.get('/', (req, res) => {
-  res.render('index', {GOOGLE_API_KEY: require('./config.json').GOOGLE_API_KEY});
+const electron = require('electron')
+// Module to control application life.
+const app = electron.app
+// Module to create native browser window.
+const BrowserWindow = electron.BrowserWindow
+
+const pug = require('electron-pug')({pretty: true}, {GOOGLE_API_KEY: require('./config.json').GOOGLE_API_KEY});
+
+// Keep a global reference of the window object, if you don't, the window will
+// be closed automatically when the JavaScript object is garbage collected.
+let mainWindow
+
+function createWindow () {
+  // Create the browser window.
+  mainWindow = new BrowserWindow({width: 1280, height: 720})
+
+  // and load the index.html of the app.
+  mainWindow.loadURL(`file://${__dirname}/views/index.pug`)
+
+  // Open the DevTools.
+  // mainWindow.webContents.openDevTools()
+
+  // Emitted when the window is closed.
+  mainWindow.on('closed', function () {
+    // Dereference the window object, usually you would store windows
+    // in an array if your app supports multi windows, this is the time
+    // when you should delete the corresponding element.
+    mainWindow = null
+  })
+}
+
+// This method will be called when Electron has finished
+// initialization and is ready to create browser windows.
+// Some APIs can only be used after this event occurs.
+app.on('ready', createWindow)
+
+// Quit when all windows are closed.
+app.on('window-all-closed', function () {
+  // On OS X it is common for applications and their menu bar
+  // to stay active until the user quits explicitly with Cmd + Q
+  if (process.platform !== 'darwin') {
+    app.quit()
+  }
 })
 
-app.get('/convert/:filename', (req, res) => {
+app.on('activate', function () {
+  // On OS X it's common to re-create a window in the app when the
+  // dock icon is clicked and there are no other windows open.
+  if (mainWindow === null) {
+    createWindow()
+  }
+})
+
+// In this file you can include the rest of your app's specific main process
+// code. You can also put them in separate files and require them here.
+
+expressApp.get('/convert', (req, res) => {
   let width = 512;
   if (req.query.width > 0) {
     width = req.query.width;
   }
   res.setHeader('Content-Type', 'image/jpeg');
-  const imagePath = path.join(require('./config.json').IMAGES_PATH, req.params.filename);
-  const tempImagePath = path.join(__dirname, req.params.filename + '_' + Date.now() + '.jpg');
+  const imagePath = req.query.path;
+  const tempImagePath = path.join(__dirname, req.query.name + '_' + Date.now() + '.jpg');
   const errorCallback = () => {
     gm(imagePath)
       .resize(width)
@@ -71,18 +120,15 @@ app.get('/convert/:filename', (req, res) => {
     });
 });
 
-app.post('/setexif/:filename', (req, res) => {
+expressApp.post('/setexif', (req, res) => {
   if (req.body) {
-    setLatLngFile(req.params.filename, req.body.lat, req.body.lng);
+    setLatLngFile(req.query.path, req.body.lat, req.body.lng);
   }
 });
 
-app.listen(8080);
+expressApp.listen(8080);
 
-opn('http://localhost:8080');
-
-function setLatLngFile(filename, lat, lng) {
-  const imagePath = path.join(require('./config.json').IMAGES_PATH, filename);
+function setLatLngFile(imagePath, lat, lng) {
   let latRef = 'North';
   if (lat < 0) {
     lat = Math.abs(lat);

@@ -5,15 +5,16 @@
   "main": "app.js",
   "dependencies": {
     "body-parser": "^1.18.3",
+    "electron": "^2.0.1",
+    "electron-pug": "^1.5.1",
     "exiftool-vendored": "^4.24.0",
     "express": "^4.16.3",
     "gm": "^1.23.1",
     "opn": "^5.3.0",
     "pug": "^2.0.3"
   },
-  "devDependencies": {},
   "scripts": {
-    "start": "node app.js",
+    "start": "electron app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

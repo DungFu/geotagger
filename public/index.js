@@ -102,7 +102,7 @@ function next() {
   }
   var form = document.getElementById("exifForm");
   if (currentFile >= 0 && currentFile < files.length) {
-    form.action = '/setexif/' + files[currentFile].name;
+    form.action = 'http://localhost:8080/setexif?path=' + files[currentFile].path;
     form.submit();
   }
   if (currentFile < files.length - 1) {
@@ -145,16 +145,19 @@ function prev() {
 }
 
 function getRemotePathForFile(fileIndex, clearPrevious) {
-  var basePath = 'http://localhost:8080/convert/';
+  var basePath = 'http://localhost:8080/convert';
   if (clearPrevious && files[fileIndex].hasOwnProperty('remotePath')) {
     delete files[fileIndex].remotePath;
   }
   if (!files[fileIndex].hasOwnProperty('remotePath')) {
     files[fileIndex].remotePath =
       basePath +
+      '?name=' +
       files[fileIndex].name +
-      '?width=' +
-      parseInt(window.innerWidth/2) +
+      '&path=' +
+      files[fileIndex].path +
+      '&width=' +
+      parseInt(window.innerWidth/2.0) +
       '&timestamp=' +
       Date.now();
   }
