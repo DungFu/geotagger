@@ -26,41 +26,48 @@ app.get('/convert/:filename', (req, res) => {
   }
   res.setHeader('Content-Type', 'image/jpeg');
   const imagePath = path.join(require('./config.json').IMAGES_PATH, req.params.filename);
-  const tempImagePath = req.params.filename + '_' + Date.now() + '.jpg';
+  const tempImagePath = path.join(__dirname, req.params.filename + '_' + Date.now() + '.jpg');
+  const errorCallback = () => {
+    gm(imagePath)
+      .resize(width)
+      .write(tempImagePath, () => {
+        maybeCopyExifGPS(imagePath, tempImagePath, () => {
+          const stream = fs.createReadStream(tempImagePath);
+          stream.pipe(res);
+          stream.on('end', () => {
+            fs.unlinkSync(tempImagePath);
+            if (fs.existsSync(tempImagePath + '_original')) {
+              fs.unlinkSync(tempImagePath + '_original');
+            }
+          });
+        });
+      });
+  };
   exiftool
-    .extractPreview(imagePath, tempImagePath)
-    .then(() => {
-      gm(tempImagePath)
-        .resize(width)
-        .write(tempImagePath, () => {
-          maybeCopyExifGPS(imagePath, tempImagePath, () => {
-            const stream = fs.createReadStream(tempImagePath);
-            stream.pipe(res);
-            stream.on('end', () => {
-              fs.unlinkSync(tempImagePath);
-              if (fs.existsSync(tempImagePath + '_original')) {
-                fs.unlinkSync(tempImagePath + '_original');
-              }
+    .read(imagePath)
+    .then((tags) => {
+      if (!tags.hasOwnProperty('PreviewImage')) {
+        return errorCallback();
+      }
+      exiftool
+        .extractPreview(imagePath, tempImagePath)
+        .then(() => {
+          gm(tempImagePath)
+            .resize(width)
+            .write(tempImagePath, () => {
+              maybeCopyExifGPS(imagePath, tempImagePath, () => {
+                const stream = fs.createReadStream(tempImagePath);
+                stream.pipe(res);
+                stream.on('end', () => {
+                  fs.unlinkSync(tempImagePath);
+                  if (fs.existsSync(tempImagePath + '_original')) {
+                    fs.unlinkSync(tempImagePath + '_original');
+                  }
+                });
+              });
             });
-          });
-        });
-    })
-    .catch(err => {
-      if (err) console.log('no preview image');
-      gm(imagePath)
-        .resize(width)
-        .write(tempImagePath, () => {
-          maybeCopyExifGPS(imagePath, tempImagePath, () => {
-            const stream = fs.createReadStream(tempImagePath);
-            stream.pipe(res);
-            stream.on('end', () => {
-              fs.unlinkSync(tempImagePath);
-              if (fs.existsSync(tempImagePath + '_original')) {
-                fs.unlinkSync(tempImagePath + '_original');
-              }
-            });
-          });
-        });
+        })
+        .catch(errorCallback);
     });
 });
 
@@ -97,15 +104,15 @@ function setLatLngFile(filename, lat, lng) {
   );
 }
 
-function maybeCopyExifGPS(origFile, newFile, callback, err = () => {}) {
+function maybeCopyExifGPS(origFile, newFile, callback) {
   exiftool
     .read(origFile)
     .then((tags) => {
       if (!tags.hasOwnProperty('GPSLatitude')
         || !tags.hasOwnProperty('GPSLatitudeRef')
-        || !tags.hasOwnProperty('GPSLatitudeRef')
-        || !tags.hasOwnProperty('GPSLatitudeRef')) {
-        return;
+        || !tags.hasOwnProperty('GPSLongitude')
+        || !tags.hasOwnProperty('GPSLongitudeRef')) {
+        return callback();
       }
       exiftool
         .write(
