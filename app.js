@@ -1,10 +1,14 @@
-const bodyParser = require('body-parser')
+const bodyParser = require('body-parser');
 const express = require('express');
 const fs = require('fs');
-const gm = require('gm');
-const opn = require('opn');
 const path = require('path');
-const { ExifTool } = require("exiftool-vendored");
+const imDarwinStatic = require("imagemagick-darwin-static");
+const gm = require('gm').subClass({
+  imageMagick: true,
+  appPath: path.join(imDarwinStatic.path, "/")
+});
+const opn = require('opn');
+const { ExifTool } = require('exiftool-vendored');
 
 const exiftool = new ExifTool();
 const expressApp = express();
@@ -12,11 +16,12 @@ const expressApp = express();
 expressApp.use(bodyParser.urlencoded({ extended: true }));
 expressApp.use(bodyParser.json());
 
-const electron = require('electron')
+const electron = require('electron');
 // Module to control application life.
-const app = electron.app
+const app = electron.app;
+const dialog = electron.dialog;
 // Module to create native browser window.
-const BrowserWindow = electron.BrowserWindow
+const BrowserWindow = electron.BrowserWindow;
 
 const pug = require('electron-pug')({pretty: true}, {GOOGLE_API_KEY: require('./config.json').GOOGLE_API_KEY});
 
@@ -26,10 +31,10 @@ let mainWindow
 
 function createWindow () {
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 1280, height: 720})
+  mainWindow = new BrowserWindow({width: 1280, height: 720});
 
   // and load the index.html of the app.
-  mainWindow.loadURL(`file://${__dirname}/views/index.pug`)
+  mainWindow.loadURL(`file://${__dirname}/views/index.pug`);
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
@@ -39,21 +44,21 @@ function createWindow () {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
-    mainWindow = null
+    mainWindow = null;
   })
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow)
+app.on('ready', createWindow);
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
   // On OS X it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') {
-    app.quit()
+    app.quit();
   }
 })
 
@@ -61,7 +66,7 @@ app.on('activate', function () {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (mainWindow === null) {
-    createWindow()
+    createWindow();
   }
 })
 
@@ -79,7 +84,11 @@ expressApp.get('/convert', (req, res) => {
   const errorCallback = () => {
     gm(imagePath)
       .resize(width)
-      .write(tempImagePath, () => {
+      .write(tempImagePath, (err) => {
+        if (err) {
+          dialog.showMessageBox({type: 'error', 'message': err.toString()});
+          return;
+        }
         maybeCopyExifGPS(imagePath, tempImagePath, () => {
           const stream = fs.createReadStream(tempImagePath);
           stream.pipe(res);
@@ -103,7 +112,11 @@ expressApp.get('/convert', (req, res) => {
         .then(() => {
           gm(tempImagePath)
             .resize(width)
-            .write(tempImagePath, () => {
+            .write(tempImagePath, (err) => {
+              if (err) {
+                dialog.showMessageBox({type: 'error', 'message': err.toString()});
+                return;
+              }
               maybeCopyExifGPS(imagePath, tempImagePath, () => {
                 const stream = fs.createReadStream(tempImagePath);
                 stream.pipe(res);

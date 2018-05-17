@@ -10,14 +10,13 @@
     "exiftool-vendored": "^4.24.0",
     "express": "^4.16.3",
     "gm": "^1.23.1",
+    "imagemagick-darwin-static": "git+https://github.com/DungFu/imagemagick-darwin-static.git",
     "opn": "^5.3.0",
     "pug": "^2.0.3"
   },
   "scripts": {
     "start": "electron app.js",
     "build-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=geotagger.icns --prune=true --out=builds",
-    "build-win": "electron-packager . --overwrite --asar=true --platform=win32 --arch=x64 --icon=geotagger.ico --prune=true --out=builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName='Geotagger'",
-    "build-linux": "electron-packager . --overwrite --asar=true --platform=linux --arch=x64 --icon=geotagger.png --prune=true --out=builds",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
