@@ -68,3 +68,6 @@ config.json
 
 # exclude builds directory for electron builds
 builds/
+
+# exclude temporary conversion directory
+temp/

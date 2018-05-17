@@ -1,11 +1,13 @@
 const bodyParser = require('body-parser');
 const express = require('express');
 const fs = require('fs');
+const fse = require('fs-extra');
 const path = require('path');
-const imDarwinStatic = require("imagemagick-darwin-static");
+const uuidv4 = require('uuid/v4');
+const im = require("imagemagick-darwin-static");
 const gm = require('gm').subClass({
   imageMagick: true,
-  appPath: path.join(imDarwinStatic.path, "/")
+  appPath: path.join(im.path, "/")
 });
 const opn = require('opn');
 const { ExifTool } = require('exiftool-vendored');
@@ -80,23 +82,23 @@ expressApp.get('/convert', (req, res) => {
   }
   res.setHeader('Content-Type', 'image/jpeg');
   const imagePath = req.query.path;
-  const tempImagePath = path.join(__dirname, req.query.name + '_' + Date.now() + '.jpg');
+  const tempFolderPath = path.join(__dirname, 'temp', uuidv4());
+  fse.ensureDirSync(tempFolderPath);
+  const tempImagePath = path.join(tempFolderPath, req.query.name + '.jpg');
   const errorCallback = () => {
     gm(imagePath)
       .resize(width)
       .write(tempImagePath, (err) => {
         if (err) {
           dialog.showMessageBox({type: 'error', 'message': err.toString()});
+          fse.removeSync(tempFolderPath);
           return;
         }
         maybeCopyExifGPS(imagePath, tempImagePath, () => {
           const stream = fs.createReadStream(tempImagePath);
           stream.pipe(res);
           stream.on('end', () => {
-            fs.unlinkSync(tempImagePath);
-            if (fs.existsSync(tempImagePath + '_original')) {
-              fs.unlinkSync(tempImagePath + '_original');
-            }
+            fse.removeSync(tempFolderPath);
           });
         });
       });
@@ -115,16 +117,14 @@ expressApp.get('/convert', (req, res) => {
             .write(tempImagePath, (err) => {
               if (err) {
                 dialog.showMessageBox({type: 'error', 'message': err.toString()});
+                fse.removeSync(tempFolderPath);
                 return;
               }
               maybeCopyExifGPS(imagePath, tempImagePath, () => {
                 const stream = fs.createReadStream(tempImagePath);
                 stream.pipe(res);
                 stream.on('end', () => {
-                  fs.unlinkSync(tempImagePath);
-                  if (fs.existsSync(tempImagePath + '_original')) {
-                    fs.unlinkSync(tempImagePath + '_original');
-                  }
+                  fse.removeSync(tempFolderPath);
                 });
               });
             });
