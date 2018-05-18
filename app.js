@@ -4,7 +4,7 @@ const fs = require('fs');
 const fse = require('fs-extra');
 const path = require('path');
 const uuidv4 = require('uuid/v4');
-const im = require("imagemagick-darwin-static");
+const im = require("imagemagick-darwin-binaries");
 const gm = require('gm').subClass({
   imageMagick: true,
   appPath: path.join(im.path, "/")
