@@ -18,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DungFu/geotagger.git"
+    "url": "git+https://github.com/fireph/geotagger.git"
   },
   "keywords": [
     "geotagger",
@@ -35,7 +35,7 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/DungFu/geotagger/issues"
+    "url": "https://github.com/fireph/geotagger/issues"
   },
-  "homepage": "https://github.com/DungFu/geotagger#readme"
+  "homepage": "https://github.com/fireph/geotagger#readme"
 }
